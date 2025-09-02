@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PetroVigilante</title>
+
+<!-- CSS Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<style>
+  /* Estilos básicos e responsivos */
+  body, html {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #5DADE2;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.4em;
+  }
+
+  #address {
+    background: #85C1E9;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+
+  #map {
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  #searchContainer {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    background: #AED6F1;
+  }
+
+  #searchInput {
+    width: 70%;
+    max-width: 400px;
+    padding: 8px 12px;
+    font-size: 1em;
+    border-radius: 4px 0 0 4px;
+    border: none;
+    outline: none;
+  }
+
+  #searchBtn {
+    padding: 9px 15px;
+    background: #2980B9;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1em;
+    border-radius: 0 4px 4px 0;
+  }
+
+  #footer {
+    background: #F39C12;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+  }
+
+  /* Ícone de alerta posicionado */
+  #alertIcon {
+    position: absolute;
+    bottom: 100px;
+    right: 20px;
+    background: yellow;
+    border-radius: 50%;
+    padding: 10px;
+    border: 2px solid black;
+    font-weight: bold;
+    font-size: 1.5em;
+  }
+
+  @media(max-width: 600px) {
+    #searchInput {
+      width: 60%;
+      font-size: 0.9em;
+    }
+
+    #searchBtn {
+      font-size: 0.9em;
+    }
+
+    #address {
+      font-size: 1em;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>PetroVigilante</header>
+
+<div id="address">RUA, BAIRRO, DISTRITO, CIDADE</div>
+
+<div id="map"></div>
+
+<div id="alertIcon" title="Alerta!">&#9888;</div>
+
+<div id="searchContainer">
+  <input type="text" id="searchInput" placeholder="Digite um endereço para pesquisar..." />
+  <button id="searchBtn">Pesquisar Local 🔍</button>
+</div>
+
+<footer id="footer">ANUNCIE AQUI</footer>
+
+<!-- JS Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+// Inicializando o mapa Leaflet
+const map = L.map('map').setView([-22.5217, -43.1767], 13); // Centro inicial (ex: Petrópolis-RJ)
+
+// Camada tile do OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+let marker = null;
+
+// Função para atualizar marcador no mapa
+function setMarker(lat, lon) {
+  if (marker) {
+    marker.setLatLng([lat, lon]);
+  } else {
+    marker = L.marker([lat, lon]).addTo(map);
+  }
+  map.setView([lat, lon], 15);
+}
+
+// Função para buscar endereço via Nominatim (reverse geocoding)
+async function getAddress(lat, lon) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if(data.address){
+      const addr = data.address;
+      // Construir string com rua, bairro, distrito e cidade (se disponíveis)
+      const rua = addr.road || addr.pedestrian || addr.cycleway || "";
+      const bairro = addr.suburb || addr.neighbourhood || "";
+      const distrito = addr.city_district || "";
+      const cidade = addr.city || addr.town || addr.village || "";
+
+      return `${rua}, ${bairro}, ${distrito}, ${cidade}`.replace(/^(,\s*)+|(\s*,)+$/g, '').replace(/\s*,\s*,/g, ', ');
+    } else {
+      return "Endereço não encontrado";
+    }
+  } catch(e) {
+    return "Erro ao buscar endereço";
+  }
+}
+
+// Obter localização do usuário
+function locateUser() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async position => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      setMarker(lat, lon);
+
+      const address = await getAddress(lat, lon);
+      document.getElementById('address').textContent = address;
+    }, () => {
+      alert("Não foi possível obter sua localização!");
+    });
+  } else {
+    alert("Geolocalização não é suportada por este navegador.");
+  }
+}
+
+// Evento de clique no botão de pesquisar
+document.getElementById('searchBtn').addEventListener('click', async () => {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) {
+    alert("Digite um endereço para pesquisar.");
+    return;
+  }
+
+  // Geocodificação forward via Nominatim
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+  try {
+    const response = await fetch(url);
+    const results = await response.json();
+
+    if (results && results.length > 0) {
+      const lat = results[0].lat;
+      const lon = results[0].lon;
+      setMarker(lat, lon);
+
+      const address = await getAddress(lat, lon);
+      document.getElementById('address').textContent = address;
+    } else {
+      alert("Local não encontrado.");
+    }
+  } catch(e) {
+    alert("Erro ao pesquisar local.");
+  }
+});
+
+// Inicializa com a localização do usuário
+locateUser();
+</script>
+
+</body>
+</html>
