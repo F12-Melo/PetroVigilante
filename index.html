@@ -1,164 +1,586 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PetroVigilante</title>
-
-<!-- CSS Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <style>
-  /* Estilos básicos e responsivos */
-  body, html {
-    margin: 0; padding: 0;
-    font-family: Arial, sans-serif;
-    height: 100vh;
+  :root {
+    --primary: #2e86c1;
+    --primary-light: #5dade2;
+    --accent: #ffb347;
+    --accent-dark: #e67e22;
+    --background: #f6f9fc;
+    --panel: #fafdff;
+    --shadow: 0 3px 24px 0 rgba(30,80,150,0.13);
+    --radius: 22px;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--background);
+    font-family: 'Roboto', Arial, sans-serif;
+  }
+  body {
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    background: var(--background);
   }
-
   header {
-    background: #5DADE2;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
     color: white;
-    padding: 15px;
-    text-align: center;
-    font-size: 1.4em;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    min-height: 62px;
+    position: relative;
+    z-index: 100;
+    border-radius: 0 0 var(--radius) var(--radius);
+    animation: fade-slide-down 1s cubic-bezier(.56,.07,.3,.96);
   }
-
+  @keyframes fade-slide-down {
+    from { opacity:0; transform:translateY(-40px);}
+    to { opacity:1; transform:translateY(0);}
+  }
+  #header-logo {
+    display: flex;
+    align-items: center;
+    height: 62px;
+    padding: 0 20px 0 18px;
+  }
+  #header-logo img {
+    height: 44px;
+    width: auto;
+    border-radius: 12px;
+    background: #fff;
+    object-fit: contain;
+    box-shadow: 0 1px 5px rgba(44,62,80,0.13);
+    transition: transform 0.2s;
+  }
+  #header-logo img:hover {
+    transform: scale(1.12) rotate(-7deg);
+  }
+  #header-title {
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-size: 1.5em;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-left: 15px;
+    margin-right: auto;
+    line-height: 1.17;
+    text-shadow: 0 2px 9px rgba(46,134,193,0.13);
+  }
   #address {
-    background: #85C1E9;
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-    font-size: 1.2em;
+    background: #e9f3fa;
+    color: #2d4052;
+    padding: 13px 2vw 11px 2vw;
+    font-weight: 500;
+    font-size: 1.12em;
+    border-bottom: 1px solid #d5e6f7;
+    text-align: center;
+    min-height: 25px;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 8px 0 rgba(30,80,150,0.04);
+    font-family: 'Montserrat', Arial, sans-serif;
   }
-
-  #map {
+  #mapContainer {
+    position: relative;
     flex-grow: 1;
     width: 100%;
+    min-height: 320px;
+    display: flex;
+    background: #d7eaf8;
+    box-shadow: var(--shadow);
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+    animation: fade-in 1.3s;
   }
-
+  #map {
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    z-index: 1;
+    border-radius: 0 0 var(--radius) var(--radius);
+    min-height: 300px;
+  }
+  #mapCursor {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 400;
+    pointer-events: none;
+    font-size: 2.2em;
+    color: var(--primary-dark);
+    text-shadow: 1px 1px 10px #fff, 0 0 2px #fff;
+    opacity: 0.93;
+    transition: opacity 0.2s, transform 0.23s cubic-bezier(.56,.07,.3,.96);
+    user-select: none;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1);}
+    60% { transform: translate(-50%, -50%) scale(1.12);}
+    100% { transform: translate(-50%, -50%) scale(1);}
+  }
+  #denunciarBtn {
+    position: absolute;
+    right: 24px; bottom: 24px;
+    z-index: 510;
+    background: linear-gradient(135deg, var(--accent-dark) 70%, var(--accent) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 66px;
+    height: 66px;
+    font-size: 2.1em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 18px 0 rgba(243,156,18, 0.24);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    transition: background 0.19s, box-shadow 0.19s, transform 0.18s;
+    animation: bounceIn 1s cubic-bezier(.76,-0.02,.36,1.23);
+  }
+  @keyframes bounceIn {
+    0% {transform: scale(0.8);}
+    50% {transform: scale(1.13);}
+    100% {transform: scale(1);}
+  }
+  #denunciarBtn:active, #denunciarBtn:hover {
+    background: linear-gradient(135deg, var(--accent) 60%, var(--accent-dark) 100%);
+    box-shadow: 0 7px 23px 0 rgba(243,156,18, 0.31);
+    transform: scale(1.09) rotate(-6deg);
+  }
   #searchContainer {
     display: flex;
     justify-content: center;
-    padding: 10px;
-    background: #AED6F1;
+    gap: 0;
+    padding: 20px 0 9px 0;
+    background: transparent;
+    animation: fade-in 2s;
   }
-
   #searchInput {
-    width: 70%;
-    max-width: 400px;
-    padding: 8px 12px;
-    font-size: 1em;
-    border-radius: 4px 0 0 4px;
-    border: none;
+    width: 64vw; max-width: 340px;
+    padding: 13px 15px;
+    font-size: 1.08em;
+    border-radius: 23px 0 0 23px;
+    border: 1.5px solid var(--primary-dark);
+    border-right: none;
     outline: none;
+    background: #fff;
+    transition: border 0.14s;
+    font-family: 'Roboto', Arial, sans-serif;
   }
-
+  #searchInput:focus {
+    border: 1.5px solid var(--accent);
+    border-right: none;
+  }
   #searchBtn {
-    padding: 9px 15px;
-    background: #2980B9;
-    border: none;
+    padding: 0 22px;
+    background: var(--accent-dark);
+    border: 1.5px solid var(--accent-dark);
     color: white;
     cursor: pointer;
-    font-size: 1em;
-    border-radius: 0 4px 4px 0;
+    font-size: 1.07em;
+    border-radius: 0 23px 23px 0;
+    border-left: none;
+    font-family: 'Montserrat', Arial, sans-serif;
+    transition: background 0.18s;
+    font-weight: 600;
+    box-shadow: 0 1px 6px rgba(91,137,176,0.05);
   }
-
+  #searchBtn:hover {
+    background: var(--primary-dark);
+    color: #fff;
+  }
   #footer {
-    background: #F39C12;
+    background: var(--primary-dark);
     color: white;
     text-align: center;
-    padding: 15px;
+    padding: 18px 0 17px 0;
     font-weight: bold;
+    letter-spacing: 0.07em;
+    font-size: 1.08em;
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: 0 -2px 9px 0 rgba(44,62,80,0.06);
+    margin-top: 20px;
+    font-family: 'Montserrat', Arial, sans-serif;
+    animation: fade-in 2.3s;
+  }
+  @keyframes fade-in {
+    from { opacity:0;}
+    to { opacity:1;}
   }
 
-  /* Ícone de alerta posicionado */
-  #alertIcon {
-    position: absolute;
-    bottom: 100px;
-    right: 20px;
-    background: yellow;
+  /* Menu de denúncia estilo Waze, animado */
+  #reportMenuOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(40,40,60,0.32);
+    z-index: 1100;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.08s;
+  }
+  #reportMenu {
+    background: linear-gradient(180deg, #fafdff 70%, #e9f3fa 100%);
+    border-radius: 32px;
+    padding: 30px 18px 24px 18px;
+    box-shadow: 0 8px 34px 0 rgba(50,50,50,0.16);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: growIn 0.17s;
+    min-width: 285px;
+    max-width: 97vw;
+    border: 2.5px solid var(--primary-light);
+    position: relative;
+  }
+  #reportMenu h2 {
+    margin: 0 0 18px 0;
+    color: #2e86c1;
+    font-weight: 700;
+    font-size: 1.15em;
+    letter-spacing: 0.03em;
+    font-family: 'Montserrat', Arial, sans-serif;
+    text-shadow: 0 1px 7px #e7f0fa;
+  }
+  .reportGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 92px);
+    gap: 21px 10px;
+    justify-content: center;
+  }
+  .reportBtn {
+    background: #fff;
     border-radius: 50%;
-    padding: 10px;
-    border: 2px solid black;
-    font-weight: bold;
-    font-size: 1.5em;
+    border: 3.2px solid #e0e0e0;
+    width: 74px; height: 74px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 2.1em;
+    box-shadow: 0 2px 7px rgba(60,60,60,0.08);
+    position: relative;
+    transition: border 0.15s, box-shadow 0.12s, transform 0.17s;
+    cursor: pointer;
+    outline: none;
+    margin: auto;
+    animation: popIn 0.4s;
   }
-
-  @media(max-width: 600px) {
-    #searchInput {
-      width: 60%;
-      font-size: 0.9em;
+  .reportBtn:active, .reportBtn:hover {
+    border: 3.2px solid var(--primary-dark);
+    box-shadow: 0 6px 25px 0 rgba(30, 136, 229, 0.17);
+    transform: scale(1.08) rotate(-4deg);
+  }
+  @keyframes popIn {
+    from {transform: scale(0.7);}
+    to {transform: scale(1);}
+  }
+  .reportLabel {
+    font-size: 0.97em;
+    color: #212c3b;
+    margin-top: 6px;
+    text-align: center;
+    font-weight: 500;
+    width: 88px;
+    max-width: 100%;
+    word-break: break-word;
+    justify-self: center;
+    font-family: 'Montserrat', Arial, sans-serif;
+    text-shadow: 0 2px 5px #e7f0fa;
+    line-height: 1.1;
+    min-height: 2.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    /* Força quebra de linha */
+    white-space: normal;
+  }
+  @media (max-width: 700px) {
+    .reportLabel {
+      font-size: 0.82em;
+      width: 23vw;
+      min-height: 2.6em;
+      padding: 0 2px;
     }
-
-    #searchBtn {
-      font-size: 0.9em;
-    }
-
-    #address {
-      font-size: 1em;
-    }
+  }
+  #closeReportMenu {
+    margin: 17px 0 0 0;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    padding: 10px 36px 10px 36px;
+    font-size: 1.05em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+    transition: background 0.18s, transform 0.14s;
+    font-family: 'Montserrat', Arial, sans-serif;
+  }
+  #closeReportMenu:hover {
+    background: var(--accent-dark);
+    transform: scale(1.04);
+  }
+  /* Snackbar (toast) */
+  #snackbar {
+    visibility: hidden;
+    min-width: 220px;
+    background-color: var(--primary-dark);
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 13px 24px;
+    position: fixed;
+    z-index: 3000;
+    left: 50%;
+    bottom: 46px;
+    font-size: 1.05em;
+    font-family: 'Montserrat', Arial, sans-serif;
+    transform: translateX(-50%);
+    box-shadow: 0 3px 18px rgba(46,134,193,0.19);
+    opacity: 0;
+    transition: opacity 0.34s, bottom 0.36s;
+  }
+  #snackbar.show {
+    visibility: visible;
+    opacity: 0.98;
+    bottom: 65px;
+  }
+  @media (max-width: 700px) {
+    #header-title { font-size: 1.12em; }
+    #searchInput { font-size: 0.93em; }
+    #searchBtn { font-size: 0.93em; }
+    #footer { font-size: 0.98em; }
+    #address { font-size: 0.99em; }
+    #reportMenu { padding: 10px 2vw 7px 2vw; }
+    .reportGrid { grid-template-columns: repeat(3, 28vw); gap: 13px 0; }
+    .reportBtn { width: 18vw; height: 18vw; font-size: 5vw; }
+    .reportLabel { font-size: 0.77em; width: 23vw; }
+    #denunciarBtn { width: 54px; height: 54px; font-size: 1.5em; right: 10px; bottom: 10px; }
+    #snackbar { font-size: 0.93em; min-width: 170px; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0;}
+    to { opacity: 1;}
+  }
+  @keyframes growIn {
+    from { transform: scale(0.82);}
+    to { transform: scale(1);}
   }
 </style>
 </head>
 <body>
 
-<header>PetroVigilante</header>
-
+<header>
+  <div id="header-logo">
+    <img src="assets/logopetro.png" alt="Logo PetroVigilante" id="logo-img">
+    <span id="header-title">PetroVigilante</span>
+  </div>
+</header>
 <div id="address">RUA, BAIRRO, DISTRITO, CIDADE</div>
-
-<div id="map"></div>
-
-<div id="alertIcon" title="Alerta!">&#9888;</div>
-
-<div id="searchContainer">
-  <input type="text" id="searchInput" placeholder="Digite um endereço para pesquisar..." />
-  <button id="searchBtn">Pesquisar Local 🔍</button>
+<div id="mapContainer">
+  <div id="map"></div>
+  <div id="mapCursor" title="Local do report">•</div>
+  <button id="denunciarBtn" title="Denuncie um risco natural"><span class="material-icons" style="font-size:1.2em;">report_problem</span></button>
 </div>
-
+<div id="searchContainer">
+  <input type="text" id="searchInput" placeholder="Digite um endereço para pesquisar..."/>
+  <button id="searchBtn"><span class="material-icons" style="font-size:1.1em;vertical-align:-4px;">search</span> Pesquisar</button>
+</div>
+<!-- Menu de denúncia -->
+<div id="reportMenuOverlay">
+  <div id="reportMenu">
+    <h2>Denunciar situação</h2>
+    <div class="reportGrid" id="reportGrid">
+      <!-- Botões injetados pelo JS -->
+    </div>
+    <button id="closeReportMenu">Cancelar</button>
+  </div>
+</div>
+<!-- Snackbar/Toast -->
+<div id="snackbar"></div>
+<!-- Sons -->
+<audio id="audio-success" src="https://cdn.pixabay.com/audio/2022/07/26/audio_124bfa68a7.mp3"></audio>
+<audio id="audio-click" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12d8b30b7c.mp3"></audio>
+<audio id="audio-alert" src="https://cdn.pixabay.com/audio/2022/08/20/audio_12a404a5e8.mp3"></audio>
 <footer id="footer">ANUNCIE AQUI</footer>
-
-<!-- JS Leaflet -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
-// Inicializando o mapa Leaflet
-const map = L.map('map').setView([-22.5217, -43.1767], 13); // Centro inicial (ex: Petrópolis-RJ)
-
-// Camada tile do OpenStreetMap
+// Limitando o zoom out (mínimo 15, máximo 20)
+const map = L.map('map', {
+  minZoom: 15,
+  maxZoom: 18
+}).setView([-22.5217, -43.1767], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-let marker = null;
+// Ícones personalizados para cada denúncia
+const denunciaIcons = {
+  'Alagamento': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/990/990517.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Deslizamento': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/414/414927.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Desmoronamento': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/4895/4895434.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Queda de árvore': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/427/427735.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Desastre elétrico': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/1301/1301344.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Obstrução': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Animais na pista': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/616/616408.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  }),
+  'Outros riscos': L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
+    iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -38]
+  })
+};
+const usuarioIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/1946/1946429.png',
+  iconSize: [38, 38],
+  iconAnchor: [19, 38],
+  popupAnchor: [0, -38]
+});
 
-// Função para atualizar marcador no mapa
-function setMarker(lat, lon) {
-  if (marker) {
-    marker.setLatLng([lat, lon]);
-  } else {
-    marker = L.marker([lat, lon]).addTo(map);
-  }
-  map.setView([lat, lon], 15);
+const tiposDenuncia = [
+  { label: 'Alagamento', icon: '🌊', cor: "#2979ff" },
+  { label: 'Deslizamento', icon: '⛰️', cor: "#bc5100" },
+  { label: 'Desmoronamento', icon: '🪨', cor: "#b71c1c" },
+  { label: 'Queda de árvore', icon: '🌳', cor: "#43a047" },
+  { label: 'Desastre elétrico', icon: '⚡', cor: "#ffd600" },
+  { label: 'Obstrução', icon: '🚧', cor: "#ff9100" },
+  { label: 'Animais na pista', icon: '🐄', cor: "#a1887f" },
+  { label: 'Outros riscos', icon: '❗', cor: "#616161" }
+];
+
+let userMarker = null;
+let denunciaMarkers = [];
+let userLat = null, userLon = null;
+
+const audioSuccess = document.getElementById('audio-success');
+const audioClick = document.getElementById('audio-click');
+const audioAlert = document.getElementById('audio-alert');
+
+function playSound(type) {
+  try {
+    if (type === "success") audioSuccess.currentTime = 0, audioSuccess.play();
+    if (type === "click") audioClick.currentTime = 0, audioClick.play();
+    if (type === "alert") audioAlert.currentTime = 0, audioAlert.play();
+  } catch(e) { /* ignore autoplay block */ }
 }
 
-// Função para buscar endereço via Nominatim (reverse geocoding)
+function showSnackbar(text, color) {
+  const sb = document.getElementById('snackbar');
+  sb.innerText = text;
+  if (color) sb.style.backgroundColor = color;
+  sb.className = "show";
+  setTimeout(() => { sb.className = sb.className.replace("show", ""); }, 2400);
+}
+
+// Função para calcular quanto tempo faz desde o report
+function timeAgo(date) {
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return `há ${seconds} seg`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `há ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `há ${hours} h`;
+  const days = Math.floor(hours / 24);
+  return `há ${days} dia${days > 1 ? 's' : ''}`;
+}
+
+function setUserMarker(lat, lon) {
+  userLat = lat;
+  userLon = lon;
+  if (userMarker) {
+    userMarker.setLatLng([lat, lon]);
+  } else {
+    userMarker = L.marker([lat, lon], {icon: usuarioIcon, title: 'Sua localização'}).addTo(map)
+      .bindPopup("Você está aqui!").openPopup();
+  }
+}
+
+// Função para buscar endereço e adicionar marker com endereço e tempo do report
+async function addDenunciaMarker(lat, lon, tipoObj, descricao) {
+  const icon = denunciaIcons[tipoObj.label] || denunciaIcons['Outros riscos'];
+  const dataReport = new Date();
+  const marker = L.marker([lat, lon], {icon: icon, title: tipoObj.label, riseOnHover: true}).addTo(map);
+
+  // Buscar endereço
+  const endereco = await getAddress(lat, lon);
+  const popupContent = `
+    <b style="font-size:1.2em">${tipoObj.icon} ${tipoObj.label}</b><br>
+    <span style="color:#222">${descricao ? descricao + "<br>" : ""}</span>
+    <span style="font-size:0.97em;color:#2e86c1"><b>Endereço:</b> ${endereco}</span><br>
+    <span id="tempo-report-${marker._leaflet_id}" style="font-size:0.93em;color:#666">Reportado há instantes</span>
+  `;
+  marker.bindPopup(popupContent);
+  marker.openPopup();
+
+  // Atualizar tempo de report a cada 30s
+  function updateReportTime() {
+    const span = document.getElementById(`tempo-report-${marker._leaflet_id}`);
+    if (span) span.innerText = "Reportado " + timeAgo(dataReport);
+  }
+  marker.on('popupopen', updateReportTime);
+  setInterval(updateReportTime, 30000);
+
+  denunciaMarkers.push(marker);
+  playSound("alert");
+  // Animação marker: bounce
+  marker._icon.style.animation = "markerBounce 0.8s";
+  setTimeout(()=>marker._icon.style.animation = "", 900);
+
+  return marker;
+}
+
+const markerBounceKeyframes = `
+@keyframes markerBounce {
+  0% { transform: scale(0.9) translateY(-10px);}
+  30% { transform: scale(1.22) translateY(-22px);}
+  60% { transform: scale(0.93) translateY(-6px);}
+  80% { transform: scale(1.05) translateY(-13px);}
+  100% { transform: scale(1) translateY(0);}
+}`;
+const markerBounceStyle = document.createElement("style");
+markerBounceStyle.innerHTML = markerBounceKeyframes;
+document.head.appendChild(markerBounceStyle);
+
 async function getAddress(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
   try {
     const response = await fetch(url);
     const data = await response.json();
-
     if(data.address){
       const addr = data.address;
-      // Construir string com rua, bairro, distrito e cidade (se disponíveis)
       const rua = addr.road || addr.pedestrian || addr.cycleway || "";
       const bairro = addr.suburb || addr.neighbourhood || "";
       const distrito = addr.city_district || "";
       const cidade = addr.city || addr.town || addr.village || "";
-
       return `${rua}, ${bairro}, ${distrito}, ${cidade}`.replace(/^(,\s*)+|(\s*,)+$/g, '').replace(/\s*,\s*,/g, ', ');
     } else {
       return "Endereço não encontrado";
@@ -168,57 +590,144 @@ async function getAddress(lat, lon) {
   }
 }
 
-// Obter localização do usuário
+async function updateAddressHeader(lat, lon) {
+  const address = await getAddress(lat, lon);
+  document.getElementById('address').textContent = address;
+}
+
 function locateUser() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(async position => {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
-      setMarker(lat, lon);
-
-      const address = await getAddress(lat, lon);
-      document.getElementById('address').textContent = address;
+      setUserMarker(lat, lon);
+      updateAddressHeader(lat, lon);
+      map.setView([lat, lon], 15);
     }, () => {
-      alert("Não foi possível obter sua localização!");
+      showSnackbar("Não foi possível obter sua localização!", "#e74c3c");
+      playSound("alert");
     });
   } else {
-    alert("Geolocalização não é suportada por este navegador.");
+    showSnackbar("Geolocalização não é suportada por este navegador.", "#e74c3c");
+    playSound("alert");
   }
 }
 
-// Evento de clique no botão de pesquisar
 document.getElementById('searchBtn').addEventListener('click', async () => {
+  playSound("click");
   const query = document.getElementById('searchInput').value.trim();
   if (!query) {
-    alert("Digite um endereço para pesquisar.");
+    showSnackbar("Digite um endereço para pesquisar.", "#e67e22");
+    playSound("alert");
     return;
   }
-
-  // Geocodificação forward via Nominatim
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-
   try {
     const response = await fetch(url);
     const results = await response.json();
-
     if (results && results.length > 0) {
-      const lat = results[0].lat;
-      const lon = results[0].lon;
-      setMarker(lat, lon);
-
-      const address = await getAddress(lat, lon);
-      document.getElementById('address').textContent = address;
+      const lat = parseFloat(results[0].lat);
+      const lon = parseFloat(results[0].lon);
+      map.setView([lat, lon], 15);
+      updateAddressHeader(lat, lon);
+      playSound("success");
+      showSnackbar("Endereço encontrado!");
     } else {
-      alert("Local não encontrado.");
+      showSnackbar("Local não encontrado.", "#e67e22");
+      playSound("alert");
     }
   } catch(e) {
-    alert("Erro ao pesquisar local.");
+    showSnackbar("Erro ao pesquisar local.", "#e67e22");
+    playSound("alert");
   }
 });
 
-// Inicializa com a localização do usuário
-locateUser();
-</script>
+map.on('click', async function(e) {
+  const lat = e.latlng.lat;
+  const lon = e.latlng.lng;
+  updateAddressHeader(lat, lon);
+  playSound("click");
+});
 
+// -------- Cursor central customizado --------
+const mapCursor = document.getElementById('mapCursor');
+function updateCursor() {
+  mapCursor.style.opacity = map.getZoom() < 10 ? '0.7' : '0.98';
+}
+map.on('move', updateCursor);
+map.on('zoom', updateCursor);
+updateCursor();
+
+// ----------- Menu de denúncias bonito -----------
+const reportMenuOverlay = document.getElementById('reportMenuOverlay');
+const reportMenu = document.getElementById('reportMenu');
+const reportGrid = document.getElementById('reportGrid');
+const closeReportMenu = document.getElementById('closeReportMenu');
+
+function openReportMenu() {
+  reportGrid.innerHTML = '';
+  tiposDenuncia.forEach((tipo, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'reportBtn';
+    btn.style.borderColor = tipo.cor;
+    // Força quebra de linha em "Desmoronamento"
+    let labelHtml = tipo.label === "Desmoronamento"
+      ? "Desmorona-<br>mento"
+      : tipo.label;
+    btn.innerHTML = `<img src="${denunciaIcons[tipo.label]?.options.iconUrl}" style="width:38px;height:38px;display:block;margin:auto;">`;
+    btn.title = tipo.label;
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      playSound("click");
+      closeMenuAndReport(tipo);
+    };
+    // Label
+    const lbl = document.createElement('div');
+    lbl.className = 'reportLabel';
+    lbl.innerHTML = labelHtml;
+    // Wrapper
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.alignItems = 'center';
+    wrap.appendChild(btn);
+    wrap.appendChild(lbl);
+    // Animar cada botão em cascata
+    btn.style.animationDelay = (idx * 0.07) + "s";
+    reportGrid.appendChild(wrap);
+  });
+  reportMenuOverlay.style.display = 'flex';
+  setTimeout(() => reportMenuOverlay.style.opacity = "1", 30);
+}
+function closeReportMenuFn() {
+  reportMenuOverlay.style.display = 'none';
+  reportMenuOverlay.style.opacity = "0";
+}
+function closeMenuAndReport(tipo) {
+  closeReportMenuFn();
+  setTimeout(() => {
+    const descricao = prompt(`Descreva o risco: ${tipo.label}`);
+    if (descricao !== null && descricao.trim() !== "") {
+      const center = map.getCenter();
+      addDenunciaMarker(center.lat, center.lng, tipo, descricao);
+      playSound("success");
+      showSnackbar("Denúncia registrada no mapa!", "#43a047");
+    } else if (descricao !== null) {
+      showSnackbar("Descrição obrigatória para denúncia.", "#e67e22");
+      playSound("alert");
+    }
+  }, 250);
+}
+reportMenuOverlay.onclick = function(e) {
+  if (e.target === reportMenuOverlay) closeReportMenuFn();
+};
+closeReportMenu.onclick = closeReportMenuFn;
+document.getElementById('denunciarBtn').onclick = openReportMenu;
+
+// Inicializa com a localização do usuário
+window.onload = () => {
+  locateUser();
+};
+</script>
 </body>
 </html>
